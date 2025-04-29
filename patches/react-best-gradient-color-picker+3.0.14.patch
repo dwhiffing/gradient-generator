@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js b/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
-index 74cffa8..59c1673 100644
+index 74cffa8..8e6b49d 100644
 --- a/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
 +++ b/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
 @@ -21,7 +21,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
@@ -23,7 +23,7 @@ index 74cffa8..59c1673 100644
 +        if (dragging && barRef.current) {
 +            const barRect = barRef.current.getBoundingClientRect();
 +            const offsetX = e.clientX - barRect.left;
-+            const positionOnBarAsPercentage = (offsetX / barRect.width) * 100;
++            const positionOnBarAsPercentage = Math.max(0, Math.min(100, (offsetX / barRect.width) * 100));
 +            handleGradient(currentColor, positionOnBarAsPercentage);
 +        } else {
 +            startX.current = e.clientX;
