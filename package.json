@@ -12,6 +12,7 @@
   "dependencies": {
     "leva": "^0.10.0",
     "react": "^19.0.0",
+    "react-best-gradient-color-picker": "^3.0.14",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {

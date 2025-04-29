@@ -1,4 +1,4 @@
-export const noiseUtils = /* glsl */ `
+const noiseUtils = /* glsl */ `
   vec2 mod289(vec2 x) {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
   }
@@ -24,7 +24,7 @@ export const noiseUtils = /* glsl */ `
   }
 `
 
-export const simplexNoise = /* glsl */ `
+const simplexNoise = /* glsl */ `
 float simplex_noise(vec3 v)
 {
   const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
@@ -133,3 +133,45 @@ float simplex_noise(vec2 v) {
   return 130.0 * dot(m, g);
 }
 `
+
+export const fragShader = `
+precision highp float;
+
+uniform float u_time;
+uniform sampler2D u_gradient;
+uniform float u_xScale;
+uniform float u_xPos;
+uniform float u_yPos;
+uniform float u_yScale;
+uniform float u_L;
+uniform float u_F;
+uniform float u_S;
+
+${noiseUtils}
+${simplexNoise}
+
+void main() {
+  vec3 red  = vec3(1.0, 0.0, 0.0);
+  vec3 blue = vec3(0.0, 0.0, 1.0);
+
+  float x = (gl_FragCoord.x + u_xPos) * u_xScale;
+  float y = (gl_FragCoord.y + u_yPos) * u_yScale;
+
+  float sum = 0.5;
+  sum += simplex_noise(vec3(x * u_L * 1.0 +  u_F * 1.0, y * u_L * 1.00, u_time * u_S)) * 0.30;
+  sum += simplex_noise(vec3(x * u_L * 0.6 +  -u_F * 0.6, y * u_L * 0.85, u_time * u_S)) * 0.26;
+  sum += simplex_noise(vec3(x * u_L * 0.4 +  u_F * 0.8, y * u_L * 0.70, u_time * u_S)) * 0.22;
+
+  float t = clamp(sum, 0.0, 1.0);
+  gl_FragColor = texture2D(u_gradient, vec2(t, 0.5));
+}
+`
+
+export const vertexShader = `
+precision highp float;
+attribute vec2 a_position;
+
+void main() {
+  vec2 clipSpace = a_position * 2.0 - 1.0;
+  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+}`
