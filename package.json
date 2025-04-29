@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "leva": "^0.10.0",
+    "patch-package": "^8.0.0",
     "react": "^19.0.0",
     "react-best-gradient-color-picker": "^3.0.14",
     "react-dom": "^19.0.0"

@@ -1,0 +1,52 @@
+diff --git a/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js b/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
+index 74cffa8..59c1673 100644
+--- a/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
++++ b/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
+@@ -21,7 +21,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+ /* eslint-disable react/no-array-index-key */
+ /* eslint-disable react/jsx-no-leaked-render */
+ /* eslint-disable jsx-a11y/no-static-element-interactions */
+-import React, { useState, useEffect } from 'react';
++import React, { useState, useEffect, useRef } from 'react';
+ import { getHandleValue } from '../utils/utils.js';
+ import { usePicker } from '../context.js';
+ import { low, high } from '../utils/formatters.js';
+@@ -98,9 +98,17 @@ var GradientBar = function () {
+         addPoint(e);
+         setDragging(true);
+     };
++    var startX = useRef(0)
++    var barRef = useRef(null)
+     var handleMove = function (e) {
+-        if (dragging)
+-            handleGradient(currentColor, getHandleValue(e, barSize));
++        if (dragging && barRef.current) {
++            const barRect = barRef.current.getBoundingClientRect();
++            const offsetX = e.clientX - barRect.left;
++            const positionOnBarAsPercentage = (offsetX / barRect.width) * 100;
++            handleGradient(currentColor, positionOnBarAsPercentage);
++        } else {
++            startX.current = e.clientX;
++        }
+     };
+     // const handleKeyboard = (e: any) => {
+     //   if (isGradient) {
+@@ -116,13 +124,17 @@ var GradientBar = function () {
+     };
+     useEffect(function () {
+         window.addEventListener('mouseup', handleUp);
++        window.addEventListener('mousemove', handleMove);
+         // window?.addEventListener('keydown', handleKeyboard)
+         return function () {
+             window.removeEventListener('mouseup', handleUp);
++            window.removeEventListener('mousemove', handleMove);
+             // window?.removeEventListener('keydown', handleKeyboard)
+         };
+     });
+-    return (React.createElement("div", { style: {
++    return (React.createElement("div", { 
++        ref: barRef,
++        style: {
+             width: '100%',
+             marginTop: 17,
+             marginBottom: 4,
