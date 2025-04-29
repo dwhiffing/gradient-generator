@@ -145,7 +145,6 @@ uniform float u_yPos;
 uniform float u_yScale;
 uniform float u_L;
 uniform float u_F;
-uniform float u_S;
 
 ${noiseUtils}
 ${simplexNoise}
@@ -158,9 +157,9 @@ void main() {
   float y = (gl_FragCoord.y + u_yPos) * u_yScale;
 
   float sum = 0.5;
-  sum += simplex_noise(vec3(x * u_L * 1.0 +  u_F * 1.0, y * u_L * 1.00, u_time * u_S)) * 0.30;
-  sum += simplex_noise(vec3(x * u_L * 0.6 +  -u_F * 0.6, y * u_L * 0.85, u_time * u_S)) * 0.26;
-  sum += simplex_noise(vec3(x * u_L * 0.4 +  u_F * 0.8, y * u_L * 0.70, u_time * u_S)) * 0.22;
+  sum += simplex_noise(vec3(x * u_L * 1.0 +  u_F * 1.0, y * u_L * 1.00, u_time)) * 0.30;
+  sum += simplex_noise(vec3(x * u_L * 0.6 +  -u_F * 0.6, y * u_L * 0.85, u_time)) * 0.26;
+  sum += simplex_noise(vec3(x * u_L * 0.4 +  u_F * 0.8, y * u_L * 0.70, u_time)) * 0.22;
 
   float t = clamp(sum, 0.0, 1.0);
   gl_FragColor = texture2D(u_gradient, vec2(t, 0.5));

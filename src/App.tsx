@@ -1,22 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
-import { useControls } from 'leva'
-import { GradientPicker } from './components/GradientPicker'
+import { useEffect, useRef } from 'react'
+import { folder, useControls } from 'leva'
+import { gradientPicker } from './components/GradientPicker'
 import { fragShader, vertexShader } from './utils/shader'
 import { createGradientTexture } from './utils/gradient'
 import { createProgram } from './utils/gl'
 
 export default function App() {
-  const width = 800
-  const height = 800
-  const [seed] = useState(Math.random() * 10000)
-  const [gradient, setGradient] = useState(
-    'linear-gradient(90deg, #060607 0%, #201847 20%, #362A7A 40%, #33A6C7 60%, #BC00B7 80%, #6C00A0 100%)',
-  )
-  const { scale, speed, position, f } = useControls({
-    position: { value: { x: 0, y: 0 }, step: 5 },
-    scale: { value: 3, min: 0.0000001, max: 100, step: 0.0001 },
-    speed: { value: 0.05, min: 0.0000001, max: 1, step: 0.0001 },
-    f: { value: 0.01, min: 0.0000001, max: 1, step: 0.0001 },
+  const { gradient, size, scale, time, position, f } = useControls({
+    position: { value: { x: 0, y: 0 }, step: 5, joystick: false },
+    size: { value: { x: 800, y: 800 }, step: 5, joystick: false },
+    scale: { value: 15, min: 0.001, max: 20, step: 0.0001 },
+    time: { value: Math.random() * 5, min: 0, max: 5, step: 0.001 },
+    f: { value: 0.01, min: 0.0000001, max: 5, step: 0.0001 },
+    gradient: folder({
+      gradient: gradientPicker(
+        'linear-gradient(90deg, #060607 0%, #201847 20%, #362A7A 40%, #33A6C7 60%, #BC00B7 80%, #6C00A0 100%)',
+      ),
+    }),
   })
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -27,13 +27,6 @@ export default function App() {
     const gl = canvas.getContext('webgl', { premultipliedAlpha: false })!
     const program = createProgram(gl, vertexShader, fragShader)
     gl.useProgram(program)
-
-    const timeStates = Array.from({ length: 2 }).map(() => ({
-      seed,
-      lastTime: Date.now(),
-      elapsed: 0,
-      timeSpeed: 1,
-    }))
 
     const positionBuffer = gl.createBuffer()!
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
@@ -49,31 +42,23 @@ export default function App() {
 
     const uniformLoc = (name: string) => gl.getUniformLocation(program, name)
     gl.uniform1i(uniformLoc('u_gradient'), 0)
-    gl.uniform1f(uniformLoc('u_xScale'), scale)
-    gl.uniform1f(uniformLoc('u_yScale'), scale)
+    gl.uniform1f(uniformLoc('u_xScale'), 20 - scale)
+    gl.uniform1f(uniformLoc('u_yScale'), 20 - scale)
     gl.uniform1f(uniformLoc('u_xPos'), position.x)
     gl.uniform1f(uniformLoc('u_yPos'), -position.y)
     gl.uniform1f(uniformLoc('u_L'), 0.0015)
     gl.uniform1f(uniformLoc('u_F'), f)
-    gl.uniform1f(uniformLoc('u_S'), speed)
 
     function render() {
-      requestAnimationFrame(render)
-
-      const now = Date.now()
-      for (let i = 0; i < 2; i++) {
-        const state = timeStates[i]
-        state.elapsed += (now - state.lastTime) * state.timeSpeed
-        state.lastTime = now
-        const t = state.seed + state.elapsed / 1000
-        const loc = uniformLoc(i === 0 ? 'u_time' : `u_time${i + 1}`)
-        if (loc) gl.uniform1f(loc, t)
-      }
+      gl.uniform1f(uniformLoc('u_time'), time)
 
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
       gl.activeTexture(gl.TEXTURE0)
 
-      const gradientTexture = createGradientTexture(gl, gradient)
+      const gradientTexture = createGradientTexture(
+        gl,
+        gradient as unknown as string,
+      )
       gl.bindTexture(gl.TEXTURE_2D, gradientTexture)
 
       gl.clearColor(0, 0, 0, 0)
@@ -82,12 +67,16 @@ export default function App() {
     }
 
     render()
-  }, [width, height, seed, gradient, scale, position, f, speed])
+  }, [size.x, size.y, gradient, time, scale, position.x, position.y, f])
 
   return (
     <>
-      <canvas ref={canvasRef} width={width} height={height} />
-      <GradientPicker gradient={gradient} setGradient={setGradient} />
+      <canvas
+        ref={canvasRef}
+        width={Math.min(size.x, window.innerWidth)}
+        height={Math.min(size.y, window.innerHeight)}
+        style={{ borderRadius: 4 }}
+      />
     </>
   )
 }
