@@ -1,5 +1,39 @@
-import { useEffect, useRef } from 'react'
-import { shader } from './shader'
+import { useEffect, useRef, useState } from 'react'
+import { noiseUtils, simplexNoise } from './shader'
+import { useControls } from 'leva'
+
+const shader = `
+precision highp float;
+
+uniform float u_time;
+uniform sampler2D u_gradient;
+uniform float u_xScale;
+uniform float u_xPos;
+uniform float u_yPos;
+uniform float u_yScale;
+uniform float u_L;
+uniform float u_F;
+uniform float u_S;
+
+${noiseUtils}
+${simplexNoise}
+
+void main() {
+  vec3 red  = vec3(1.0, 0.0, 0.0);
+  vec3 blue = vec3(0.0, 0.0, 1.0);
+
+  float x = (gl_FragCoord.x + u_xPos) * u_xScale;
+  float y = (gl_FragCoord.y + u_yPos) * u_yScale;
+
+  float sum = 0.5;
+  sum += simplex_noise(vec3(x * u_L * 1.0 +  u_F * 1.0, y * u_L * 1.00, u_time * u_S)) * 0.30;
+  sum += simplex_noise(vec3(x * u_L * 0.6 +  -u_F * 0.6, y * u_L * 0.85, u_time * u_S)) * 0.26;
+  sum += simplex_noise(vec3(x * u_L * 0.4 +  u_F * 0.8, y * u_L * 0.70, u_time * u_S)) * 0.22;
+
+  float t = clamp(sum, 0.0, 1.0);
+  gl_FragColor = texture2D(u_gradient, vec2(t, 0.5));
+}
+`
 
 const N_TIME_VALUES = 2
 
@@ -82,9 +116,41 @@ function createGradientTexture(
 export default function GaussianNoiseApp() {
   const width = 800
   const height = 800
-  const seed = 12926
+  const [seed] = useState(Math.random() * 10000)
+  const { scale, speed, position, f } = useControls({
+    position: { value: { x: 0, y: 0 }, step: 5 },
+    scale: {
+      value: 3,
+      min: 0.0000001,
+      max: 100,
+      step: 0.0001,
+    },
+    speed: {
+      value: 0.05,
+      min: 0.0000001,
+      max: 1,
+      step: 0.0001,
+    },
+    f: {
+      value: 0.01,
+      min: 0.0000001,
+      max: 1,
+      step: 0.0001,
+    },
+  })
+
+  const yPos = -position.y
+  const xPos = position.x
+
   const colorConfiguration = {
-    gradient: ['hsl(141 75% 72%)', 'hsl(41 90% 62%)', 'hsl(358 64% 50%)'],
+    gradient: [
+      '#060607',
+      '#201847',
+      '#362A7A',
+      '#33A6C7',
+      '#BC00B7',
+      '#6C00A0',
+    ],
   }
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -122,6 +188,13 @@ export default function GaussianNoiseApp() {
     gl.enableVertexAttribArray(a_position)
     gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0)
     gl.uniform1i(uniformLoc('u_gradient'), 0)
+    gl.uniform1f(uniformLoc('u_xScale'), scale)
+    gl.uniform1f(uniformLoc('u_yScale'), scale)
+    gl.uniform1f(uniformLoc('u_xPos'), xPos)
+    gl.uniform1f(uniformLoc('u_yPos'), yPos)
+    gl.uniform1f(uniformLoc('u_L'), 0.0015)
+    gl.uniform1f(uniformLoc('u_F'), f)
+    gl.uniform1f(uniformLoc('u_S'), speed)
 
     let stop = false
     function render() {
@@ -154,7 +227,17 @@ export default function GaussianNoiseApp() {
     return () => {
       stop = true
     }
-  }, [width, height, seed, colorConfiguration.gradient])
+  }, [
+    width,
+    height,
+    seed,
+    colorConfiguration.gradient,
+    scale,
+    xPos,
+    yPos,
+    f,
+    speed,
+  ])
 
   return <canvas ref={canvasRef} width={width} height={height} />
 }
