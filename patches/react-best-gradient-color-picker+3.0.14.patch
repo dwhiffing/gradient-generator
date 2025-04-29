@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js b/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
-index 74cffa8..8e6b49d 100644
+index 74cffa8..08b596d 100644
 --- a/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
 +++ b/node_modules/react-best-gradient-color-picker/dist/esm/components/GradientBar.js
 @@ -21,7 +21,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
@@ -11,7 +11,13 @@ index 74cffa8..8e6b49d 100644
  import { getHandleValue } from '../utils/utils.js';
  import { usePicker } from '../context.js';
  import { low, high } from '../utils/formatters.js';
-@@ -98,9 +98,17 @@ var GradientBar = function () {
+@@ -93,14 +93,21 @@ var GradientBar = function () {
+         setDragging(false);
+     };
+     var handleDown = function (e) {
+-        if (dragging)
+-            return;
++        if (dragging) return;
          addPoint(e);
          setDragging(true);
      };
@@ -31,7 +37,7 @@ index 74cffa8..8e6b49d 100644
      };
      // const handleKeyboard = (e: any) => {
      //   if (isGradient) {
-@@ -116,13 +124,17 @@ var GradientBar = function () {
+@@ -116,13 +123,17 @@ var GradientBar = function () {
      };
      useEffect(function () {
          window.addEventListener('mouseup', handleUp);
